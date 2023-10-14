@@ -21,6 +21,11 @@ function linvChar.savePlayerData(ply)
     LinvLib.SQL.Query("UPDATE plyDataSaver SET linv_char = '" .. data .. "' WHERE steamID64 = '" .. ply:SteamID64() .. "'")
 end
 
+// Create DB Stucture
+hook.Add("LinvLib.SQL.Init", "linvChar:SQL:Init", function()
+    LinvLib.SQL.Query("CREATE TABLE IF NOT EXISTS linvChar (steamID64 CHAR(255), reroll INT, PRIMARY KEY (steamID64))")
+end)
+
 hook.Add("linv_plyDataSaver_savePlyData", "linv_char_savePlyData", function(ply)
     linvChar.savePlayerData(ply)
 end)

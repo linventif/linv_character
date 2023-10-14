@@ -1,5 +1,5 @@
 linvChar.Config.DefaultMana = 1000 // Default mana of a player
-
+linvChar.Config.DefaultReroll = 2 // Default reroll of a player
 linvChar.Config.Natures = {
     ["eau"] = {
         ["drop"] = 0.2
