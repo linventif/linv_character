@@ -19,7 +19,7 @@ local name = "Linventif Character"
 local license = "CC BY-SA 4.0"
 local version = "0.1.0"
 
-plyDataSaver = {
+linvChar = {
     ["Config"] = {},
     ["Info"] = {
         ["name"] = name,
