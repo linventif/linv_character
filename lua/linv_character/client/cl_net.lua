@@ -5,7 +5,8 @@
 // Variables
 local netName = "linvChar"
 local netTable = {
-    ["reroll"] = 0
+    ["reroll"] = 0,
+    ["clientReady"] = 1
 }
 
 // Send

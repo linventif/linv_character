@@ -5,7 +5,8 @@
 // Variables
 local netName = "linvChar"
 local netTable = {
-    [0] = "reroll"
+    [0] = "reroll",
+    [1] = "clientReady"
 }
 
 // Add Network Strings

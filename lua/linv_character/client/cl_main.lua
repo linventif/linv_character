@@ -1,6 +1,8 @@
-hook.Add("InitPostEntity", "linvChar:InitPostEntity", function()
+hook.Add("InitPostEntity", "linvChar:Player:InitPostEntity", function()
+    linvChar.sendNet("clientReady")
     plyDataSaver.sendNet("clientReady")
 end)
+plyDataSaver.sendNet("clientReady")
 
 function menuReroll()
     local frame = vgui.Create("DFrame")

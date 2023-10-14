@@ -52,19 +52,13 @@ local function showStat(try)
     end
 end
 
+concommand.Add("linv_char", function(ply, cmd, args)
+    if (ply != NULL) then return end
+    local try = tonumber(args[1]) || 1000
+    showStat(try)
+end)
+
 hook.Add("linv_plyDataSaver_loadPlyData", "linvChar.loadPlyData", function(ply, data)
-    LinvLib.SQL.Query("SELECT * FROM linvChar WHERE steamID64 = '" .. ply:SteamID64() .. "'", function(data)
-        data = data[1] || {}
-        if (!data) then
-            LinvLib.SQL.Query("INSERT INTO linvChar (steamID64, reroll) VALUES ('" .. ply:SteamID64() .. "', " .. linvChar.Config.DefaultReroll .. ")")
-            data = {
-                reroll = linvChar.Config.DefaultReroll
-            }
-        end
-
-        ply:SetNWInt("linv_reroll", data.reroll || 0)
-    end)
-
     if (!data.linv_char) then return end
 
     data.linv_char = util.JSONToTable(data.linv_char) || {}
@@ -86,7 +80,13 @@ function meta:GetLinvCharID()
 end
 
 function meta:GetLinvNature()
-    return self:GetNWString("linv_nature")
+    local nature = self:GetNWString("linv_nature")
+    if (!nature || !linvChar.Config.Natures[nature]) then
+        self:RerollLinvNature()
+        return self:GetLinvNature()
+    else
+        return nature
+    end
 end
 
 function meta:GetLinvMana()
@@ -97,25 +97,40 @@ function meta:GetLinvManaMax()
     return self:GetNWInt("linv_mana_max")
 end
 
-function meta:RerollLinvNature()
+function meta:TryRerollLinvNature()
     LinvLib.SQL.Query("SELECT * FROM linvChar WHERE steamID64 = '" .. self:SteamID64() .. "'", function(data)
-        if (!data || !data[1] || !(data.reroll > 0)) then
+        if (!data || !data[1] || !(data[1].reroll > 0)) then
             self:ChatPrint("Vous n'avez plus de reroll disponible, vous pouvez en acheter sur notre boutique https://fogo-rp.fr")
             return
         end
-
-        data = data[1]
-
-        local newNature = pickNature()
-        self:SetNWString("linv_nature", newNature)
-        self:ChatPrint("Vous avez reroll votre nature, vous êtes maintenant " .. newNature .. " !")
-
+        self:RerollLinvNature()
         LinvLib.SQL.Query("UPDATE linvChar SET reroll = reroll - 1 WHERE steamID64 = '" .. self:SteamID64() .. "'")
-        linvChar.savePlayerData(ply)
+        self:SetNWInt("linv_reroll", self:GetNWInt("linv_reroll") - 1)
     end)
 end
 
+function meta:RerollLinvNature()
+    local newNature = pickNature()
+    self:SetNWString("linv_nature", newNature)
+    self:ChatPrint("Vous avez reroll votre nature, vous êtes maintenant " .. newNature .. " !")
+
+    linvChar.savePlayerData(self)
+end
+
 linvChar.net = linvChar.net || {}
+
 function linvChar.net.reroll(ply)
-    ply:RerollLinvNature()
+    ply:TryRerollLinvNature()
+end
+
+function linvChar.net.clientReady(ply)
+    LinvLib.SQL.Query("SELECT * FROM linvChar WHERE steamID64 = '" .. ply:SteamID64() .. "'", function(data)
+        if (!data || !data[1]) then
+            LinvLib.SQL.Query("INSERT INTO linvChar (steamID64, reroll) VALUES ('" .. ply:SteamID64() .. "', " .. linvChar.Config.DefaultReroll .. ")")
+
+            ply:SetNWInt("linv_reroll", linvChar.Config.DefaultReroll)
+        else
+            ply:SetNWInt("linv_reroll", data[1].reroll || 0)
+        end
+    end)
 end
